@@ -1,0 +1,30 @@
+body {
+    background-color: black;
+    text-align: center;
+}
+
+label {
+    color: white;
+}
+
+p, h1, h2 {
+    background: black;
+    color: white;
+    width: 50%;
+}
+
+img {
+    /* width: 50%; */
+    align:left;
+}
+
+ol {
+    background: black;
+    color: white;
+    width: 47%;
+}
+
+a {
+    color: yellow;
+}
+
