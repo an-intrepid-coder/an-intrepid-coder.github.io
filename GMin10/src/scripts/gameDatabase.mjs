@@ -74,7 +74,7 @@ function generateGameViewMode(game) {
     document.body.appendChild(accuracyP);
     // EPL
     let elpP = document.createElement("p");
-    let elpText = document.createTextNode(`Easily Preventable Loss: ${game.gotLucky}`);
+    let elpText = document.createTextNode(`Easily Preventable Loss: ${game.easilyPreventableLoss}`);
     elpP.appendChild(elpText);
     document.body.appendChild(elpP);
     // numTurns
