@@ -17,6 +17,11 @@ export class ChessGameData {
                 numBlunders, // int
                 timeControl, // string (e.g. "rapid30", "bullet1", etc.)
                 remarks, // string
+                moveList, // string (TODO: Integrate and import all move lists for games so far
+                           //               -- includes writing a one-time script to re-write the JSON database to
+                           //               include them for the ones already added. Should be able to just copy-paste
+                           //               the recorded move-lists from chess.com for now, and eventually automate their
+                           //               collection!) 
                ){ // more to come!
         this.date = date;
         this.opponent = opponent;

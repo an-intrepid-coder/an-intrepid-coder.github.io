@@ -1,0 +1,67 @@
+<!doctype html>
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Update 2: Early Software Prototypes</title>
+        <link rel="stylesheet" href="../style.css">
+    </head>
+    <body>
+        <h1> <u> March 21st, 2023 </u> </h1>
+        <h2> Game Improvement Notes </h2>
+        <p> 
+            With careful play, I've won most of my recent games. But there is a lot of room for improvement!
+        </p>
+        <h2> Accuracy </h2>
+            <p> 
+                Unsurprisingly, accuracy is a good predictor of who wins a game. Whether both players are playing with
+                relatively poor accuracy, high accuracy, or one player is playing with markedly higher accuracy than the
+                other, the winner is usually the player who makes the most accurate moves (according to the "accuracy"
+                percentage given during a chess.com post-game analysis). This is the case in nearly all games so far,
+                actually. My own accuracy ranges from about 40% to 95+% from game to game, as I am decidedly more
+                capable in certain positions and under certain circumstances. When the tools are more robust, I can
+                probably find statistical insights there about when I am playing the most accurately, when I am playing
+                the least accurately, and exactly what to study to play with consistently high accuracy.
+            </p>
+        <h2> Software Notes </h2>
+            <p> 
+                Finished an early version of the game data analysis database and graph visualization tools. It has some
+                kinks to work out but it's functional now. In the future I want to hook it up to the chess.com API
+                (I've been told one exists) and use it to automatically convert my games to the JSON database I have here.
+                I also want to make a page for the site which replays chess games with some extra analysis (not the same
+                stuff which the chess.com post-game analysis does, but some other things) and just for giggles. I will
+                also want to hook it up to the Lichess API (if there is one), and scrape my several hundred games from
+                that platform.
+            </p>
+            <p> The Graph visualization, I am writing from scratch as a math exercise (it's got some unique wrinkles),
+                and the project in general is an opportunity to get more proficient with JavaScript and HTML5 in general.
+                The Database is just a big JSON file which I am importing games to manually via a node script. Eventually,
+                I will find a more robust database solution and make the whole project more modern, as it could be a
+                decent long-term project in itself. 
+            </p>
+            <p>
+                In the very long term it would be neat to hook the whole thing up to a chess engine and start doing some
+                analysis that way, just to get some experience in how to make something like the chess.com or Lichess
+                game analysis tools. While duplicating them would probably not be worthwhile, I may find things to do
+                which they aren't doing, so that it could be a useful supplemental tool. Similarly, I am trying not to
+                duplicate all the graphs in the chess.com "Insights" section, and instead look for graphs I can make that
+                explore slightly different things, as their tools are really good already.
+            </p>
+            <p>
+                Currently, the database is only tracking the games I've manually input since March 19th, 2023, using 
+                hand-picked metrics, all played online through chess.com's Android app. In the future I will want to
+                automate scraping the data on all my games from the platform itself, and retrofit the database to 
+                include whatever metrics they offer in addition to my own. I will eventually want to start a separate
+                category for my Lichess games, and also for games not played on an online platform. <i>Eventually</i>,
+                this will result in a data structure that combines all of the metrics from these things into something
+                universal for my purposes, and possibly useful in general.
+            </p>
+            <h2> Other </h2>
+            <p>
+                I suppose this project and site will also serve as a kind of blog, given the format, but its scope is 
+                restricted to chess and the tools for analyzing my game as I improve.
+            </p>
+        <a href="../index.html">back to index</a>
+    </body>
+</html>
+

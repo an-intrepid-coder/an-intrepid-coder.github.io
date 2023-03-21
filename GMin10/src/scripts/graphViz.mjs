@@ -3,6 +3,7 @@ import * as data from "../gameData/myGames20230319toPresent.json" assert {type: 
 
 const CANVAS_WIDTH = 1200;
 const CANVAS_HEIGHT = 600;
+const BACKGROUND_COLOR = "rgb(170, 170, 170)";
 
 let canvas = document.getElementById("canvas");
 canvas.width = CANVAS_WIDTH;
@@ -10,7 +11,7 @@ canvas.height = CANVAS_HEIGHT;
 
 let context = canvas.getContext("2d");
 
-context.fillStyle = "rgb(150, 150, 150)";
+context.fillStyle = BACKGROUND_COLOR;
 context.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
 let table = data.default;
@@ -23,7 +24,7 @@ function lineGraph(datums, // list of strings which are also a property of the J
                    legend, // string with the bottom legend
     ) { 
     // clear canvas of previous graph, if any
-    context.fillStyle = "rgb(150, 150, 150)";
+    context.fillStyle = BACKGROUND_COLOR;
     context.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     context.fillStyle = "black";
     context.strokeStyle = "black";
@@ -42,6 +43,7 @@ function lineGraph(datums, // list of strings which are also a property of the J
     let xAxisInc = canvasWidth / numGames; 
 
     // y-axis scale and values
+    /* TODO: The scaling of the Y-Axis values could be better.  */
     var yAxisValues = new Set();
     var low = Infinity;
     var high = 0;
@@ -77,7 +79,7 @@ function lineGraph(datums, // list of strings which are also a property of the J
         yPositions.push({data: val, px: yCount});
         context.fillText(`${val}`, 0, yCount);
         yCount += interval;
-    }
+    } // TODO: ^ Stagger the labels so that when there are potentially hundreds it only displays 5-10.
 
     // Draw bottom legend
     context.fillText(legend, bufferLeft, CANVAS_HEIGHT - 5);
@@ -133,9 +135,11 @@ ratingButton.addEventListener("mouseup", event => {
     lineGraph(["rating", "oppRating"], "Y-Axis: Chess.com ELO | X-Axis: Games Played | Black=Self, Red=Opponent");
 });
 
-// TODO: Win ratio by opening and piece color
+// TODO: Win/loss comparison by opening.
 
 // TODO: Pie Graph of openings played
+
+// TODO: Graph correlating playing with higher accuracy and winning
 
 // and many more to follow...!
 
