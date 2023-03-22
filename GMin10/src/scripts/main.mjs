@@ -1,6 +1,6 @@
 // Node stuff: commented out for the live site
 
-/* 
+/*
 
 import {ChessGameData} from "./chessGameData.mjs";
 import * as fs from "fs";
@@ -24,9 +24,9 @@ function addGameToTable(game) {
 }
 
 let game = new ChessGameData (
-                "20230321", // YYYYMMDD string
+                "20230322", // YYYYMMDD string
                 opponent, // string
-                798, // int
+                815, // int
                 , // int
                 whiteOrBlack, // string
                 winLossDraw,  // string
@@ -42,4 +42,6 @@ let game = new ChessGameData (
                );
 
 addGameToTable(game);
+
 */
+
