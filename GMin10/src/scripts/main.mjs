@@ -9,8 +9,15 @@ import * as path from "path";
 
 // Save a game to the system, by running a node command. 
 function addGameToTable(game) {
+    // Get and parse move list:
+    let moveList = fs.readFileSync("<path_to_move_list_here>", "utf8").replace(/\n+/g, "");
+    game.moveList = moveList;
+
+    // Get the table:
     let oldTable = fs.readFileSync("/home/sgibber/Projects/GMin10/src/gameData/myGames20230319toPresent.json", "utf8");
     let table = JSON.parse(oldTable);
+
+    // Push to table and re-write it:
     table.push(game);
     let newTable = JSON.stringify(table);
     fs.writeFileSync("../gameData/myGames20230319toPresent.json", newTable);
@@ -35,6 +42,4 @@ let game = new ChessGameData (
                );
 
 addGameToTable(game);
-
 */
-

@@ -102,6 +102,11 @@ function generateGameViewMode(game) {
     let remarksText = document.createTextNode(`Remarks: ${game.remarks}`);
     remarksP.appendChild(remarksText);
     document.body.appendChild(remarksP);
+    // Move List
+    let moveListP = document.createElement("p");
+    let moveListText = document.createTextNode(`Move List: ${game.moveList.replace(/["]+/g, "")}`);
+    moveListP.appendChild(moveListText);
+    document.body.appendChild(moveListP);
 
     // Notes
     let br = document.createElement("br");
@@ -132,7 +137,7 @@ function generateGameViewMode(game) {
     document.body.appendChild(elpNoteP);
     // On gotLucky
     let gotLuckyNoteP = document.createElement("p");
-    let gotLuckyNote = document.createTextNode("\nNote: 'Got Lucky' is the inverse of an easily preventable loss. These are games where the opponent made a serious blunder which decided the game, or missed a very bad move on part which allowed me to win.");
+    let gotLuckyNote = document.createTextNode("\nNote: 'Got Lucky' is the inverse of an easily preventable loss. These are games where the opponent made a serious blunder which decided the game, or missed a very bad move on my part which allowed me to win.");
     gotLuckyNoteP.appendChild(gotLuckyNote);
     document.body.appendChild(gotLuckyNoteP);
 
