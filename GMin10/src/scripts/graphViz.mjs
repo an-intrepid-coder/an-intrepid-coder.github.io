@@ -3,7 +3,7 @@ import * as data from "../gameData/myGames20230319toPresent.json" assert {type: 
 
 const CANVAS_WIDTH = 1200;
 const CANVAS_HEIGHT = 600;
-const BACKGROUND_COLOR = "rgb(170, 170, 170)";
+const BACKGROUND_COLOR = "rgb(180, 180, 180)";
 
 // TODO: Small bug where viewing the pie charts will mess up the left-side
 // labels of the line graphs when you go back to them. Refreshing page
@@ -14,6 +14,10 @@ function randomColor() {
         return Math.round(Math.random() * 255);
     }
     return `rgb(${randRgb()}, ${randRgb()}, ${randRgb()})`;
+}
+
+function divideAndRound(a, b) {
+    return Math.round(a / b * 10000) / 100;
 }
 
 // canvas stuff
@@ -144,24 +148,37 @@ function lineGraph(datums, // list of strings which are also a property of the J
 // (preferable), with a node script on the db.
 
 /* Draws a pie chart based on a single mutually-exclusive data category.  */
-function pieChart(datum,  // string which is a property of the objects,
-                           // containing mutually exclusive possibilities
-                  legend   // string containing the legend
+function pieChart(datum, // string which is a property of the objects,
+                         // containing mutually exclusive possibilities
+                  legend, // string containing the legend
                  ) {
     // Gathering the results
-    let categories = new Set();
+    // Correlates all data with win/loss ratio by piece.
     let count = new Map();
     for (let game of table) {
-        categories.add(game[datum]);
-    }
-    for (let category of categories) {
-        count.set(category, 0);
-    }
-    for (let game of table) {
-        if (count.has(game[datum])) {
-            let value = count.get(game[datum]);
-            count.set(game[datum], value + 1);
+        let gameData = game[datum];
+        if (!count.has(gameData)) {
+            let gameRecord = {total: 1, whiteWins: 0, whiteTotal: 0, 
+                              blackWins: 0, blackTotal: 0};
+            count.set(gameData, gameRecord);
+        } else {
+            let gameRecord = count.get(gameData);
+            gameRecord.total = gameRecord.total + 1;
+            count.set(gameData, gameRecord);
         }
+        let gameRecord = count.get(gameData);
+        if (game.whiteOrBlack == "white") {
+            gameRecord.whiteTotal = gameRecord.whiteTotal + 1;
+            if (game.winLossDraw == "win") {
+                gameRecord.whiteWins = gameRecord.whiteWins + 1;
+            }
+        } else if (game.whiteOrBlack == "black") {
+            gameRecord.blackTotal = gameRecord.blackTotal + 1;
+            if (game.winLossDraw == "win") {
+                gameRecord.blackWins = gameRecord.blackWins + 1;
+            }
+        }
+        count.set(gameData, gameRecord);
     }
 
     // drawing the graph
@@ -171,10 +188,10 @@ function pieChart(datum,  // string which is a property of the objects,
                   y: dimensions.canvasHeight / 2 + dimensions.bufferTop};
     let angle = -0.5 * Math.PI;
     for (let result of count.entries()) {
-        let key = result[0];
+        let key = result[0]; 
         let value = result[1];
         // Pie Slice
-        let nextAngle = (value / numGames) * 2 * Math.PI;
+        let nextAngle = (value.total / numGames) * 2 * Math.PI;
         let radius = dimensions.canvasHeight * .50; 
         context.beginPath();
         context.arc(center.x, center.y, radius, angle, angle + nextAngle);
@@ -192,11 +209,16 @@ function pieChart(datum,  // string which is a property of the objects,
         } else {
             context.textAlign = "left";
         }
-        context.fillText(`${key}: ${value}/${numGames} (${Math.round(value / numGames * 10000) / 100}%)`, labelX, labelY);
+        context.fillText(`${key}: ${value.total}/${numGames} (${divideAndRound(value.total, numGames)}%)`, labelX, labelY);
+        context.fillText(`win % w/ white: ${value.whiteTotal} (${divideAndRound(value.whiteWins, value.whiteTotal)}%)`, labelX, labelY + 10);
+        context.fillText(`win % w/ black: ${value.blackTotal} (${divideAndRound(value.blackWins, value.blackTotal)}%)`, labelX, labelY + 20);
+
         angle += nextAngle; 
     }
     // Legend
-    context.fillText(legend, dimensions.bufferLeft, dimensions.bufferTop);
+    context.textAlign = "left";
+    context.fillText(legend, 30, dimensions.bufferTop);
+    context.fillText("(NaN% == no games fit that criteria)", 30, dimensions.bufferTop + 15);
 }
 
 /* A series of buttons to create unique graphs based on certain data points.  */
