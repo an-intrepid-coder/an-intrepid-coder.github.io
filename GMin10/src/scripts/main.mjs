@@ -8,9 +8,9 @@ import {fileURLToPath} from "url";
 import * as path from "path";
 
 // Save a game to the system, by running a node command. 
-function addGameToTable(game) {
+function addGameToTable(game, pathToMoveList) {
     // Get and parse move list:
-    let moveList = fs.readFileSync("<path_to_move_list_here>", "utf8").replace(/\n+/g, "");
+    let moveList = fs.readFileSync(pathToMoveList, "utf8").replace(/\n+/g, "");
     game.moveList = moveList;
 
     // Get the table:
@@ -22,26 +22,6 @@ function addGameToTable(game) {
     let newTable = JSON.stringify(table);
     fs.writeFileSync("../gameData/myGames20230319toPresent.json", newTable);
 }
-
-let game = new ChessGameData (
-                "20230322", // YYYYMMDD string
-                opponent, // string
-                815, // int
-                , // int
-                whiteOrBlack, // string
-                winLossDraw,  // string
-                opening, // string
-                acc, // float
-                oppAcc, //float
-                easilyPreventableLoss, // bool
-                gotLucky, // bool
-                numTurns, // int
-                numBlunders, // int
-                "rapid30", // string (e.g. "rapid30", "bullet1", etc.)
-                remarks, // string
-               );
-
-addGameToTable(game);
 
 */
 

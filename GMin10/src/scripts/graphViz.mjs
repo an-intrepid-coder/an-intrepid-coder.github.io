@@ -9,10 +9,12 @@ const BACKGROUND_COLOR = "rgb(170, 170, 170)";
 // labels of the line graphs when you go back to them. Refreshing page
 // fixes in the meantime.
 
-// TODO: Encapsulate all the line colors stuff into a class, including
-//       the fillIndex stuff
-
-const lineColors = ["black", "red", "blue", "green", "magenta"];
+function randomColor() {
+    function randRgb() {
+        return Math.round(Math.random() * 255);
+    }
+    return `rgb(${randRgb()}, ${randRgb()}, ${randRgb()})`;
+}
 
 // canvas stuff
 let canvas = document.getElementById("canvas");
@@ -99,22 +101,28 @@ function lineGraph(datums, // list of strings which are also a property of the J
         yCount += interval;
     } // TODO: ^ Stagger the labels so that when there are potentially hundreds it only displays 5-10.
 
-    // Draw bottom legend
-    context.fillText(legend, dimensions.bufferLeft, CANVAS_HEIGHT - 5);
-
     // Draw graph
-    var fillIndex = 0;
+    let colors = [];
     for (let datum of datums) {
-        context.fillStyle = lineColors[fillIndex];
-        context.strokeStyle = lineColors[fillIndex];
+        let color = randomColor();
+        colors.push(color);
         var currentX = dimensions.bufferLeft;
         context.beginPath();
         context.moveTo(currentX, getYExact(table[0][datum]));
+        let first = true;
         for (let game of table) {
             let value = game[datum];
             context.lineWidth = 1;
             let currentY = getYExact(value); 
+            // Draw label
+            if (first) {
+                context.fillStyle = "black";
+                context.fillText(datum, currentX, currentY - 10);
+                first = false;
+            }
             // Draw the line to the next point:
+            context.fillStyle = color;
+            context.strokeStyle = color;
             context.lineTo(currentX, currentY);
             context.stroke(); 
             context.moveTo(currentX, currentY);
@@ -123,8 +131,11 @@ function lineGraph(datums, // list of strings which are also a property of the J
             context.fill();
             currentX += xAxisInc;
         }
-        fillIndex = (fillIndex + 1) % lineColors.length;
     }
+
+    // Draw bottom legend
+    context.fillStyle = "black";
+    context.fillText(legend, dimensions.bufferLeft, CANVAS_HEIGHT - 5);
 }
 
 // TODO: pie charts requiring other datums such as gotLucky vs. 
@@ -159,7 +170,6 @@ function pieChart(datum,  // string which is a property of the objects,
     let center = {x: dimensions.canvasWidth / 2 + dimensions.bufferTop + dimensions.bufferLeft,
                   y: dimensions.canvasHeight / 2 + dimensions.bufferTop};
     let angle = -0.5 * Math.PI;
-    var fillIndex = 0;
     for (let result of count.entries()) {
         let key = result[0];
         let value = result[1];
@@ -169,22 +179,21 @@ function pieChart(datum,  // string which is a property of the objects,
         context.beginPath();
         context.arc(center.x, center.y, radius, angle, angle + nextAngle);
         context.lineTo(center.x, center.y);
-        context.fillStyle = lineColors[fillIndex];
+        context.fillStyle = randomColor();
         context.fill();
         // Label
         let labelAngle = angle + 0.5 * nextAngle; 
         let labelX = Math.cos(labelAngle) * (radius + 20) + center.x;
         let labelY = Math.sin(labelAngle) * (radius + 20) + center.y;
         context.fillStyle = "black";
-        let x = Math.cos(labelAngle); // * radius;
+        let x = Math.cos(labelAngle); 
         if (x < 0) {
             context.textAlign = "right";
         } else {
             context.textAlign = "left";
         }
-        context.fillText(`${key}: ${value}/${numGames}`, labelX, labelY);
+        context.fillText(`${key}: ${value}/${numGames} (${Math.round(value / numGames * 10000) / 100}%)`, labelX, labelY);
         angle += nextAngle; 
-        fillIndex = (fillIndex + 1) % lineColors.length;
     }
     // Legend
     context.fillText(legend, dimensions.bufferLeft, dimensions.bufferTop);
@@ -219,19 +228,18 @@ numBlundersButton.addEventListener("mouseup", event => {
 // Accuracy per game (including opp. accuracy)
 let accButton = document.getElementById("acc");
 accButton.addEventListener("mouseup", event => {
-    lineGraph(["accuracy", "oppAccuracy"], "Y-Axis: Move Accuracy | X-Axis: Games Played | Black=Self, Red=Opponent");
+    lineGraph(["accuracy", "oppAccuracy"], "Y-Axis: Move Accuracy | X-Axis: Games Played");
 });
 
 // Rating per game (including opp. accuracy)
 let ratingButton = document.getElementById("rating");
 ratingButton.addEventListener("mouseup", event => {
-    lineGraph(["rating", "oppRating"], "Y-Axis: Chess.com ELO | X-Axis: Games Played | Black=Self, Red=Opponent");
+    lineGraph(["rating", "oppRating"], "Y-Axis: Chess.com ELO | X-Axis: Games Played");
 });
 
-// TODO: Win/loss comparison by opening.
+// TODO: Win/loss comparison by opening <-- will require a 2-D pie graph
 
-// TODO: Pie Graph of openings played
-// TODO: Pie Graph of got lucky / easily preventable loss / neither
+// TODO: Pie Graph of got lucky / easily preventable loss / neither <-- Will require restructuring JSON
 
 // TODO: Graph correlating playing with higher accuracy and winning
 
