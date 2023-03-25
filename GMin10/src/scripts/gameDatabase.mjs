@@ -1,8 +1,9 @@
 import {ChessGameData} from "./chessGameData.mjs";
 import * as data from "../gameData/myGames20230319toPresent.json" assert {type: 'json'};
 
-let table = data.default;
+// TODO: Save scroll-states between modes
 
+let table = data.default;
 let numGames = table.length;
 
 // Generate the labels for the games
@@ -25,6 +26,7 @@ function clearBody() {
 
 // Display all the data for the selected game
 function generateGameViewMode(game) {
+    window.scrollTo(0, 0);
     // header with opponent name
     let h2 = document.createElement("h2");
     let title = document.createTextNode(`sgibber2018 vs ${game.opponent}`);
@@ -87,11 +89,6 @@ function generateGameViewMode(game) {
     let gotLuckyText = document.createTextNode(`Got Lucky: ${game.gotLucky}.`);
     gotLuckyP.appendChild(gotLuckyText);
     document.body.appendChild(gotLuckyP);
-    // Blunders
-    let blundersP = document.createElement("p");
-    let blundersText = document.createTextNode(`# Blunders: ${game.numBlunders}.`);
-    blundersP.appendChild(blundersText);
-    document.body.appendChild(blundersP);
     // Time Control
     let timeControlP = document.createElement("p");
     let timeControlText = document.createTextNode(`Time Control: ${game.timeControl}.`);
@@ -140,7 +137,6 @@ function generateGameViewMode(game) {
     let gotLuckyNote = document.createTextNode("\nNote: 'Got Lucky' is the inverse of an easily preventable loss. These are games where the opponent made a serious blunder which decided the game, or missed a very bad move on my part which allowed me to win.");
     gotLuckyNoteP.appendChild(gotLuckyNote);
     document.body.appendChild(gotLuckyNoteP);
-
 }
 
 /* Generates the DOM as a list of buttons for each game in the table,

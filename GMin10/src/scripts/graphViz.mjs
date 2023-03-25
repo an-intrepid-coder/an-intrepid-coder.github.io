@@ -3,11 +3,7 @@ import * as data from "../gameData/myGames20230319toPresent.json" assert {type: 
 
 const CANVAS_WIDTH = 1200;
 const CANVAS_HEIGHT = 600;
-const BACKGROUND_COLOR = "rgb(180, 180, 180)";
-
-// TODO: Small bug where viewing the pie charts will mess up the left-side
-// labels of the line graphs when you go back to them. Refreshing page
-// fixes in the meantime.
+const BACKGROUND_COLOR = "rgb(0, 0, 0)";
 
 function randomColor() {
     function randRgb() {
@@ -27,9 +23,6 @@ canvas.height = CANVAS_HEIGHT;
 
 let context = canvas.getContext("2d");
 
-context.fillStyle = BACKGROUND_COLOR;
-context.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-
 // Table of games
 let table = data.default;
 let numGames = table.length;
@@ -38,9 +31,8 @@ let numGames = table.length;
 function clearCanvas() {
     context.fillStyle = BACKGROUND_COLOR;
     context.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    context.fillStyle = "black";
-    context.strokeStyle = "black";
 }
+clearCanvas();
 
 // An object with the adjusted dimensions to include buffer space.
 // Will eventually be more dynamic.
@@ -54,98 +46,65 @@ class bufferedDimensions {
     }
 }
 
-// Graphing functions
+/* Graphing function currently assumes the Y-Axis is being measured against games in chronological order 
+   on the X-Axis.  */ // duh, this is algebra. hehe
 function lineGraph(datums, // list of strings which are also a property of the JSON objects in table
                            // and the value of that member needs to also be a number
-                   legend, // string with the bottom legend
-    ) { 
-    clearCanvas();
-
-    let dimensions = new bufferedDimensions();
-
-    // get x-axis distance increment 
-    let xAxisInc = dimensions.canvasWidth / numGames; 
-
-    // y-axis scale and values
-    /* TODO: The scaling of the Y-Axis values could be better.  */
-    var yAxisValues = new Set();
-    var low = Infinity;
-    var high = 0;
+                   legend, // string with the legend
+                  ) {
+    let high = 0; // TODO: Re-work BufferedDimensions class
+    let low = Infinity;
     for (let game of table) {
         for (let datum of datums) {
-            let value = game[datum];
-            yAxisValues.add(value);
-            if (value < low) low = value;
-            if (value > high) high = value;
+            if (game[datum] < low) low = game[datum];
+            else if (game[datum] > high) high = game[datum];
         }
-    }
-    // Sorting the Set:
-    let temp = Array.from(yAxisValues);
-    temp.sort((a, b) => {
-        if (a < b) return 1;
-        else if (a > b) return -1;
-        else return 0; 
-    });
-    yAxisValues = new Set(temp);
-
-    // Grab y-values in pixels based on the pre-collected positional data
-    let yPositions = [];
-    function getYExact(y) {
-        for (let pos of yPositions) {
-            if (pos.data === y) return pos.px;
-        }
-    }
-
-    // Draw left-side labels
-    let interval = dimensions.canvasHeight / yAxisValues.size;
-    var yCount = dimensions.bufferTop;
-    for (let val of yAxisValues) {
-        yPositions.push({data: val, px: yCount});
-        context.fillText(`${val}`, 0, yCount);
-        yCount += interval;
-    } // TODO: ^ Stagger the labels so that when there are potentially hundreds it only displays 5-10.
+    } 
+    let dimensions = {high: high, low: low,
+                      cells: {x: numGames, y: high - low}, 
+                      px: {x: canvas.width, y: canvas.height}};
+    dimensions.tickX = dimensions.px.x / dimensions.cells.x;
+    dimensions.tickY = dimensions.px.y / dimensions.cells.y;
+    dimensions.xToPx = (x) => { return x * dimensions.tickX; };
+    dimensions.yToPx = (y) => { return dimensions.px.y - ((y - low) * dimensions.tickY) };
 
     // Draw graph
-    let colors = [];
+    clearCanvas();
+    context.beginPath();
     for (let datum of datums) {
-        let color = randomColor();
-        colors.push(color);
-        var currentX = dimensions.bufferLeft;
         context.beginPath();
-        context.moveTo(currentX, getYExact(table[0][datum]));
+        context.strokeStyle = randomColor();
+        let x = 0;
         let first = true;
         for (let game of table) {
-            let value = game[datum];
-            context.lineWidth = 1;
-            let currentY = getYExact(value); 
-            // Draw label
+            let xPx = dimensions.xToPx(x);
+            let y = game[datum];
+            let yPx = dimensions.yToPx(y);
             if (first) {
-                context.fillStyle = "black";
-                context.fillText(datum, currentX, currentY - 10);
+                context.moveTo(xPx, yPx);
                 first = false;
+                context.fillStyle = "white";
+                context.fillText(datum, xPx, yPx + 10);
             }
-            // Draw the line to the next point:
-            context.fillStyle = color;
-            context.strokeStyle = color;
-            context.lineTo(currentX, currentY);
-            context.stroke(); 
-            context.moveTo(currentX, currentY);
-            // Draw the point for the current datum
-            context.arc(currentX, currentY, 3, 0, Math.PI * 2);
-            context.fill();
-            currentX += xAxisInc;
+            context.lineTo(xPx, yPx);
+            context.stroke();
+            // draw highest and lowest labels, if found
+            context.fillStyle = "white";
+            if (y == high) 
+                context.fillText(y, xPx, yPx + 10);
+            else if (y == low) 
+                context.fillText(y, xPx, yPx - 10);
+            // draw 10% of other labels:
+            else if (Math.random() < .1 && !first)
+                context.fillText(y, xPx, yPx);
+            //console.log(`x=${xPx}, y=${yPx}`);
+            x += 1;
         }
     }
-
-    // Draw bottom legend
-    context.fillStyle = "black";
-    context.fillText(legend, dimensions.bufferLeft, CANVAS_HEIGHT - 5);
+    // Legend:
+    context.fillStyle = "white";
+    context.fillText(legend, 10, dimensions.px.y - 10);
 }
-
-// TODO: pie charts requiring other datums such as gotLucky vs. 
-// easilyAvoidedLoss will have to be structured differently,
-// or, I'll want to restructure how that data is organized
-// (preferable), with a node script on the db.
 
 /* Draws a pie chart based on a single mutually-exclusive data category.  */
 function pieChart(datum, // string which is a property of the objects,
@@ -202,7 +161,7 @@ function pieChart(datum, // string which is a property of the objects,
         let labelAngle = angle + 0.5 * nextAngle; 
         let labelX = Math.cos(labelAngle) * (radius + 20) + center.x;
         let labelY = Math.sin(labelAngle) * (radius + 20) + center.y;
-        context.fillStyle = "black";
+        context.fillStyle = "white";
         let x = Math.cos(labelAngle); 
         if (x < 0) {
             context.textAlign = "right";
@@ -210,18 +169,25 @@ function pieChart(datum, // string which is a property of the objects,
             context.textAlign = "left";
         }
         context.fillText(`${key}: ${value.total}/${numGames} (${divideAndRound(value.total, numGames)}%)`, labelX, labelY);
-        context.fillText(`win % w/ white: ${value.whiteTotal} (${divideAndRound(value.whiteWins, value.whiteTotal)}%)`, labelX, labelY + 10);
-        context.fillText(`win % w/ black: ${value.blackTotal} (${divideAndRound(value.blackWins, value.blackTotal)}%)`, labelX, labelY + 20);
+        context.fillText(`as white: ${value.whiteTotal} (${divideAndRound(value.whiteWins, value.whiteTotal)}% wins)`, labelX, labelY + 10);
+        context.fillText(`as black: ${value.blackTotal} (${divideAndRound(value.blackWins, value.blackTotal)}% wins)`, labelX, labelY + 20);
 
         angle += nextAngle; 
     }
     // Legend
     context.textAlign = "left";
+    context.fillStyle = "white";
     context.fillText(legend, 30, dimensions.bufferTop);
     context.fillText("(NaN% == no games fit that criteria)", 30, dimensions.bufferTop + 15);
 }
 
 /* A series of buttons to create unique graphs based on certain data points.  */
+
+// Graphs the timeControl used in each game as a pie chart
+let timeControlButton = document.getElementById("timeControl");
+timeControlButton.addEventListener("mouseup", event => {
+    pieChart("timeControl", "Time Controls Used");
+});
 
 // Graphs the openings used in each game as a pie chart
 let openingsButton = document.getElementById("openings");
@@ -241,12 +207,6 @@ numTurnsButton.addEventListener("mouseup", event => {
     lineGraph(["numTurns"], "Y-Axis: # Turns/game | X-Axis: Games Played");
 });
 
-// Blunders per game over time line graph
-let numBlundersButton = document.getElementById("numBlunders");
-numBlundersButton.addEventListener("mouseup", event => {
-    lineGraph(["numBlunders"], "Y-Axis: # Blunders/game | X-Axis: Games Played");
-});
-
 // Accuracy per game (including opp. accuracy)
 let accButton = document.getElementById("acc");
 accButton.addEventListener("mouseup", event => {
@@ -259,11 +219,9 @@ ratingButton.addEventListener("mouseup", event => {
     lineGraph(["rating", "oppRating"], "Y-Axis: Chess.com ELO | X-Axis: Games Played");
 });
 
-// TODO: Win/loss comparison by opening <-- will require a 2-D pie graph
-
 // TODO: Pie Graph of got lucky / easily preventable loss / neither <-- Will require restructuring JSON
 
-// TODO: Graph correlating playing with higher accuracy and winning
+// TODO: Graph correlating playing with higher accuracy and winning <-- Will require restructuring JSON and/or pieGraph()
 
 // and many more to follow...!
 

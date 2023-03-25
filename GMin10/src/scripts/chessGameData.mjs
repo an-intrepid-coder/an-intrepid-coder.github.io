@@ -14,7 +14,6 @@ export class ChessGameData {
                 easilyPreventableLoss, // bool
                 gotLucky, // bool
                 numTurns, // int
-                numBlunders, // int
                 timeControl, // string (e.g. "rapid30", "bullet1", etc.)
                 remarks, // string
                 moveList = null, // string, but usually parsed and added separately after construction
@@ -31,7 +30,6 @@ export class ChessGameData {
         this.easilyPreventableLoss = easilyPreventableLoss;
         this.gotLucky = gotLucky;
         this.numTurns = numTurns;
-        this.numBlunders = numBlunders;
         this.timeControl = timeControl;
         this.remarks = remarks;
     }
