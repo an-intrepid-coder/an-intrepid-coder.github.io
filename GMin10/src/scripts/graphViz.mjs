@@ -12,8 +12,9 @@ function randomColor() {
     return `rgb(${randRgb()}, ${randRgb()}, ${randRgb()})`;
 }
 
+// Divides a by b and then returns a result rounded to the hundredths
 function divideAndRound(a, b) {
-    return Math.round(a / b * 10000) / 100;
+    return ((a / b) * 100).toPrecision(2);
 }
 
 // canvas stuff
@@ -47,11 +48,19 @@ class bufferedDimensions {
 }
 
 /* Graphing function currently assumes the Y-Axis is being measured against games in chronological order 
-   on the X-Axis.  */ // duh, this is algebra. hehe
+   on the X-Axis.  */ 
 function lineGraph(datums, // list of strings which are also a property of the JSON objects in table
                            // and the value of that member needs to also be a number
                    legend, // string with the legend
                   ) {
+    function isRatingGraph() {
+        if (datums.length == 2) { // TODO: fiddle with this code to look better
+            if (datums[0] == "rating" && datums[1] == "oppRating")
+                return true;
+        }
+        return false;
+    }
+
     let high = 0; // TODO: Re-work BufferedDimensions class
     let low = Infinity;
     for (let game of table) {
@@ -97,13 +106,68 @@ function lineGraph(datums, // list of strings which are also a property of the J
             // draw 10% of other labels:
             else if (Math.random() < .1 && !first)
                 context.fillText(y, xPx, yPx);
-            //console.log(`x=${xPx}, y=${yPx}`);
             x += 1;
         }
     }
     // Legend:
     context.fillStyle = "white";
-    context.fillText(legend, 10, dimensions.px.y - 10);
+    context.fillText(legend, 10, 10);
+    // Extra Labels:
+    if (isRatingGraph()) {
+        let results = {
+            totalWins: 0,
+            gamesHigher: 0,
+            winsHigher: 0,
+            gamesLowerOrSame: 0,
+            winsLowerOrSame: 0,
+            luckyWins: 0,
+            totalLosses: 0,
+            preventableLosses: 0,
+            ratingChanges: [], 
+            totalRatingDiff: table[table.length - 1].rating - table[0].rating,
+        }
+        // ^ NOTE: Assumes at least two games in the table, for now
+        let lastGame = null;
+        for (let game of table) {
+            if (lastGame != null) {
+                let diff = game.rating - lastGame.rating;
+                results.ratingChanges.push(diff);
+            }
+            if (game.winLossDraw == "win") {
+                results.totalWins++;
+                if (game.oppRating > game.rating) results.winsHigher++;
+                else results.winsLowerOrSame++;
+                if (game.gotLucky) results.luckyWins++;
+            }
+            else { 
+                results.totalLosses++;
+                if (game.easilyPreventableLoss) results.preventableLosses++;
+            }
+            if (game.oppRating > game.rating) results.gamesHigher++;
+            else results.gamesLowerOrSame++;
+
+            lastGame = game;
+        } 
+        let eloChange = 0;
+        for (let result of results.ratingChanges) {
+            eloChange += result;
+        }
+        eloChange /= results.ratingChanges.length; 
+        let gamesPer100 = 100 / eloChange; // will refine this part more (TODO)
+
+        function plusOrNot(x) {
+            if (x >= 0) return "+";
+            else return "";
+        }
+        let bottom = canvas.height - 10; 
+        context.fillText(`win % vs higher ELO: ${divideAndRound(results.winsHigher, results.gamesHigher)}%`, 0, bottom - 60);
+        context.fillText(`win % vs less or same ELO: ${divideAndRound(results.winsLowerOrSame, results.gamesLowerOrSame)}%`, 0, bottom - 50);
+        context.fillText(`rating +/- per game (avg): ${plusOrNot(eloChange)}${eloChange.toPrecision(2)}`, 0, bottom - 40);
+        context.fillText(`rating change over ${numGames} games: ${plusOrNot(results.totalRatingDiff)}${results.totalRatingDiff}`, 0, bottom - 30);
+        context.fillText(`about ${Math.round(gamesPer100)} games per +100 ELO at current rate`, 0, bottom - 20);
+        context.fillText(`lucky wins: ${divideAndRound(results.luckyWins, results.totalWins)}% of wins`, 0, bottom - 10);
+        context.fillText(`preventable losses: ${divideAndRound(results.preventableLosses, results.totalLosses)}% of losses`, 0, bottom);
+    } // TODO: accuracy graph extra labels
 }
 
 /* TODO: Hovering labels instead of the current ones which can get in each
@@ -220,8 +284,6 @@ let ratingButton = document.getElementById("rating");
 ratingButton.addEventListener("mouseup", event => {
     lineGraph(["rating", "oppRating"], "Y-Axis: Chess.com ELO | X-Axis: Games Played");
 });
-
-// TODO: Pie Graph of got lucky / easily preventable loss / neither <-- Will require restructuring JSON
 
 // TODO: Graph correlating playing with higher accuracy and winning <-- Will require restructuring JSON and/or pieGraph()
 

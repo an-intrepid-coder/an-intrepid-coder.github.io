@@ -1,6 +1,7 @@
 // Node stuff: commented out for the live site
 
 /*
+
 import {ChessGameData} from "./chessGameData.mjs";
 import * as fs from "fs";
 import {fileURLToPath} from "url";
@@ -23,7 +24,7 @@ function addGameToTable(game, pathToMoveList) {
 }
 
 let game = new ChessGameData(
-                    "20230325", // YYYYMMDD string
+                    "20230326", // YYYYMMDD string
                     name, // string
                     rating, // int
                     oppRating, // int
@@ -39,5 +40,6 @@ let game = new ChessGameData(
                     "", // string
                );
 addGameToTable(game, "./");
+
 */
 
