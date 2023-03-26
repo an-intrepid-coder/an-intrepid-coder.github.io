@@ -14,7 +14,7 @@ function randomColor() {
 
 // Divides a by b and then returns a result rounded to the hundredths
 function divideAndRound(a, b) {
-    return ((a / b) * 100).toPrecision(2);
+    return ((a / b) * 100).toPrecision(4);
 }
 
 // canvas stuff
@@ -54,14 +54,14 @@ function lineGraph(datums, // list of strings which are also a property of the J
                    legend, // string with the legend
                   ) {
     function isRatingGraph() {
-        if (datums.length == 2) { // TODO: fiddle with this code to look better
+        if (datums.length == 2) { 
             if (datums[0] == "rating" && datums[1] == "oppRating")
                 return true;
         }
         return false;
     }
 
-    let high = 0; // TODO: Re-work BufferedDimensions class
+    let high = 0; 
     let low = Infinity;
     for (let game of table) {
         for (let datum of datums) {
@@ -172,6 +172,78 @@ function lineGraph(datums, // list of strings which are also a property of the J
 
 /* TODO: Hovering labels instead of the current ones which can get in each
    others' way.  */
+/* Draws a bar chart based on a single mutually-exclusive data category.  */
+function barChart(datum, // string which is a property of the objects,
+                         // containing mutually exclusive possibilities
+                  legend, // string containing the legend
+                 ) {
+    // Gathering the results
+    // Correlates all data with win/loss ratio by piece.
+    let count = new Map();
+    for (let game of table) {
+        let gameData = game[datum];
+        if (!count.has(gameData)) {
+            let gameRecord = {total: 1, whiteWins: 0, whiteTotal: 0, 
+                              blackWins: 0, blackTotal: 0};
+            count.set(gameData, gameRecord);
+        } else {
+            let gameRecord = count.get(gameData);
+            gameRecord.total++;
+            count.set(gameData, gameRecord);
+        }
+        let gameRecord = count.get(gameData);
+        if (game.whiteOrBlack == "white") {
+            gameRecord.whiteTotal++;
+            if (game.winLossDraw == "win") {
+                gameRecord.whiteWins++;
+            }
+        } else if (game.whiteOrBlack == "black") {
+            gameRecord.blackTotal++;
+            if (game.winLossDraw == "win") {
+                gameRecord.blackWins++;
+            }
+        }
+        count.set(gameData, gameRecord);
+    }
+    console.log(count);
+
+    // Drawing the graph
+    let dimensions = {high: 0, low: Infinity, 
+                      tickX: canvas.width / count.size};
+    for (let result of count.entries()) {
+        let key = result[0]; 
+        let value = result[1];
+        if (value.total > dimensions.high) dimensions.high = value.total;
+        else if (value.total < dimensions.low) dimensions.low = value.total;
+    }
+    dimensions.tickY =  canvas.height / dimensions.high;
+    dimensions.yToPx = (y) => { return canvas.height - ((y - dimensions.low) * dimensions.tickY) };
+    console.log(dimensions);
+
+    clearCanvas();
+    var x = 0;
+    for (let result of count.entries()) {
+        let key = result[0]; 
+        let value = result[1];
+        let topBuffer = 50;
+        let y = dimensions.yToPx(value.total);
+        context.fillStyle = randomColor();
+        context.fillRect(x, y + 30, dimensions.tickX, canvas.height - 10);
+        context.fillStyle = "white";
+        context.fillText(`${key}: ${value.total}/${numGames} (${divideAndRound(value.total, numGames)}%)`, x, y - 30);
+        context.fillText(`white: ${value.whiteTotal} (${divideAndRound(value.whiteWins, value.whiteTotal)}% wins)`, x, y - 20);
+        context.fillText(`black: ${value.blackTotal} (${divideAndRound(value.blackWins, value.blackTotal)}% wins)`, x, y - 10);
+        x += dimensions.tickX;
+    }
+    // Legend
+    //context.textAlign = "left";
+    context.fillStyle = "white";
+    context.fillText(legend, 5, 10);
+    context.fillText("(NaN% == no games fit that criteria)", 5, 20);
+}
+
+/* TODO: Hovering labels instead of the current ones which can get in each
+   others' way.  */
 /* Draws a pie chart based on a single mutually-exclusive data category.  */
 function pieChart(datum, // string which is a property of the objects,
                          // containing mutually exclusive possibilities
@@ -188,24 +260,25 @@ function pieChart(datum, // string which is a property of the objects,
             count.set(gameData, gameRecord);
         } else {
             let gameRecord = count.get(gameData);
-            gameRecord.total = gameRecord.total + 1;
+            gameRecord.total++;
             count.set(gameData, gameRecord);
         }
         let gameRecord = count.get(gameData);
         if (game.whiteOrBlack == "white") {
-            gameRecord.whiteTotal = gameRecord.whiteTotal + 1;
+            gameRecord.whiteTotal++;
             if (game.winLossDraw == "win") {
-                gameRecord.whiteWins = gameRecord.whiteWins + 1;
+                gameRecord.whiteWins++;
             }
         } else if (game.whiteOrBlack == "black") {
-            gameRecord.blackTotal = gameRecord.blackTotal + 1;
+            gameRecord.blackTotal++;
             if (game.winLossDraw == "win") {
-                gameRecord.blackWins = gameRecord.blackWins + 1;
+                gameRecord.blackWins++;
             }
         }
         count.set(gameData, gameRecord);
     }
-
+    console.log(count);
+    
     // drawing the graph
     clearCanvas();
     let dimensions = new bufferedDimensions();
@@ -248,6 +321,12 @@ function pieChart(datum, // string which is a property of the objects,
 }
 
 /* A series of buttons to create unique graphs based on certain data points.  */
+
+// Graph openings used in a bar chart
+let openingsBarButton = document.getElementById("openingsBar");
+openingsBarButton.addEventListener("mouseup", event => {
+    barChart("opening", "Openings Used"); 
+});
 
 // Graphs the timeControl used in each game as a pie chart
 let timeControlButton = document.getElementById("timeControl");
