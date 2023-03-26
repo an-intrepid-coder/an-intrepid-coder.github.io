@@ -106,6 +106,8 @@ function lineGraph(datums, // list of strings which are also a property of the J
     context.fillText(legend, 10, dimensions.px.y - 10);
 }
 
+/* TODO: Hovering labels instead of the current ones which can get in each
+   others' way.  */
 /* Draws a pie chart based on a single mutually-exclusive data category.  */
 function pieChart(datum, // string which is a property of the objects,
                          // containing mutually exclusive possibilities
