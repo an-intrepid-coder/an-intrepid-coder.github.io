@@ -5,6 +5,8 @@ import * as data from "../gameData/myGames20230319toPresent.json" assert {type: 
 
 // TODO: Search database by datum w/ sorted results
 
+// TODO: Redesign this part in general
+
 let table = data.default;
 let numGames = table.length;
 
@@ -116,7 +118,7 @@ function generateGameViewMode(game) {
     document.body.appendChild(borderP);
     // on ELO
     let eloNoteP = document.createElement("p");
-    let eloNote = document.createTextNode("\nNote: ELO ratings sometimes from before the match and sometimes the data is from after the matche. So there is a small margin of error but the trends should be almost the same.");
+    let eloNote = document.createTextNode("\nNote: ELO ratings are sometimes from before the match and sometimes the data is from after the match. So there is a small margin of error but the trends should be almost the same.");
     eloNoteP.appendChild(eloNote);
     document.body.appendChild(eloNoteP);
     // on Openings

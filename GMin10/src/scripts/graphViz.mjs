@@ -124,6 +124,7 @@ function lineGraph(datums, // list of strings which are also a property of the J
             totalLosses: 0,
             preventableLosses: 0,
             ratingChanges: [], 
+            eloDifferences: [],
             totalRatingDiff: table[table.length - 1].rating - table[0].rating,
         }
         // ^ NOTE: Assumes at least two games in the table, for now
@@ -132,6 +133,8 @@ function lineGraph(datums, // list of strings which are also a property of the J
             if (lastGame != null) {
                 let diff = game.rating - lastGame.rating;
                 results.ratingChanges.push(diff);
+                let eloDiff = game.rating - game.oppRating;
+                results.eloDifferences.push(eloDiff);
             }
             if (game.winLossDraw == "win") {
                 results.totalWins++;
@@ -153,6 +156,12 @@ function lineGraph(datums, // list of strings which are also a property of the J
             eloChange += result;
         }
         eloChange /= results.ratingChanges.length; 
+        let avgDiff = 0;
+        for (let result of results.eloDifferences) {
+            avgDiff += result;
+        }
+        avgDiff /= results.eloDifferences.length;
+        // TODO: ^ these two could be one loop
         let gamesPer100 = 100 / eloChange; // will refine this part more (TODO)
 
         function plusOrNot(x) {
@@ -160,8 +169,13 @@ function lineGraph(datums, // list of strings which are also a property of the J
             else return "";
         }
         let bottom = canvas.height - 10; 
-        context.fillText(`win % vs higher ELO: ${divideAndRound(results.winsHigher, results.gamesHigher)}%`, 0, bottom - 60);
-        context.fillText(`win % vs less or same ELO: ${divideAndRound(results.winsLowerOrSame, results.gamesLowerOrSame)}%`, 0, bottom - 50);
+        if (avgDiff > 0) {
+            context.fillText(`average opponent is ${avgDiff.toPrecision(4)} ELO lower`, 0, bottom - 70);
+        } else {
+            context.fillText(`average opponent is ${Math.abs(avgDiff).toPrecision(4)} ELO higher`, 0, bottom - 70);
+        }
+        context.fillText(`win % vs higher ELO: ${results.winsHigher}/${results.gamesHigher} (${divideAndRound(results.winsHigher, results.gamesHigher)}%)`, 0, bottom - 60);
+        context.fillText(`win % vs less or same ELO: ${results.winsLowerOrSame}/${results.gamesLowerOrSame} (${divideAndRound(results.winsLowerOrSame, results.gamesLowerOrSame)}%)`, 0, bottom - 50);
         context.fillText(`rating +/- per game (avg): ${plusOrNot(eloChange)}${eloChange.toPrecision(2)}`, 0, bottom - 40);
         context.fillText(`rating change over ${numGames} games: ${plusOrNot(results.totalRatingDiff)}${results.totalRatingDiff}`, 0, bottom - 30);
         context.fillText(`about ${Math.round(gamesPer100)} games per +100 ELO at current rate`, 0, bottom - 20);
