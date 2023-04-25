@@ -19,21 +19,3 @@ function addGameToTable(game, pathToMoveList) {
     fs.writeFileSync("../gameData/myGames20230319toPresent.json", newTable);
 }
 
-let game = new ChessGameData(
-                    "20230327", // YYYYMMDD string
-                    name, // string
-                    rating, // int
-                    oppRating, // int
-                    whiteOrBlack, // string
-                    winLossDraw,  // string
-                    opening, // string
-                    acc, // float
-                    oppAcc, //float
-                    elp, // bool
-                    gotLucky, // bool
-                    numTurns, // int
-                    "rapid30", // string (e.g. "rapid30", "bullet1", etc.)
-                    "", // string
-               );
-addGameToTable(game, "./");
-

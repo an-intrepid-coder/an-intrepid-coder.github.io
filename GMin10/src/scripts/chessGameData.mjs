@@ -1,6 +1,7 @@
 /* A data object for chess games played online, and another object to act as a table containing them. 
    Eventually this will support a lot of different kinds of analysis.  */
 
+// TODO: Rename to ChessGameMetadata
 export class ChessGameData {
     constructor(date, // YYYYMMDD string
                 opponent, // string

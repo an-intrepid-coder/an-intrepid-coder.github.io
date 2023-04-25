@@ -21,7 +21,6 @@ function divideAndRound(a, b) {
 let canvas = document.getElementById("canvas");
 canvas.width = CANVAS_WIDTH;
 canvas.height = CANVAS_HEIGHT;
-
 let context = canvas.getContext("2d");
 
 // Table of games
@@ -111,7 +110,7 @@ function lineGraph(datums, // list of strings which are also a property of the J
     }
     // Legend:
     context.fillStyle = "white";
-    context.fillText(legend, 10, 10);
+    context.fillText(legend, canvas.width - 300, 10);
     // Extra Labels:
     if (isRatingGraph()) {
         let results = {
