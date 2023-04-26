@@ -8,16 +8,6 @@ const selectedColor = "rgb(0, 200, 0)";
 export const ANIMATION_DELAY = 120;
 const pieceTypes = ["p", "Q", "B", "N", "R", "K"];
 
-// TODO: Implement basic chess rules && 2-player hotseat
-/* ^ Steps: 
-    1. Two-step select->target click with valid move checks.
-    2. Return move in algebraic notation.
-    3. Affect board state correctly.  */
-
-// TODO: Human vs. AI play
-
-// TODO: Animated game replays
-
 // canvas stuff
 let canvas = document.getElementById("canvas");
 canvas.width = SQUARE_SIZE * BOARD_SIZE;
@@ -106,6 +96,9 @@ class chessGameState {
         this.selected = null; // `${FILE}${RANK}` or null
         // TODO: much more
     }
+    flipBoard() { // TODO: make sure this function is used throughout
+        this.flipped = !this.flipped;
+    }
     /* Returns the string of the square based on the x, y coordinates of a square.  */
     getSquare(x, y) {  
         if (!this.flipped) {
@@ -117,6 +110,13 @@ class chessGameState {
             let file = Array.from(FILES).reverse()[x];
             return `${file}${rank}`;
         }
+    }
+    toCoords(squareString) {
+        let file = squareString[0];
+        let rank = squareString[1];
+        let y = BOARD_SIZE - Number.parseInt(rank);
+        let x = FILES.indexOf(file);
+        return {x: x, y: y};
     }
     flippedCoords(x, y) {
         return {x: BOARD_SIZE - 1 - x, y: BOARD_SIZE - 1 - y};
@@ -170,16 +170,39 @@ function renderBoardState(gameState) {
 
 // The game state:
 let game = new chessGameState();
-let start = Date.now();
 
 // Event listener which responds to player clicking on canvas square
 canvas.addEventListener("click", (event) => { 
+    let wasFlipped = game.flipped;
+    if (wasFlipped) game.flipBoard();
     let x = Math.floor((event.x - canvas.offsetLeft) / SQUARE_SIZE);
     let y = Math.floor((event.y - canvas.offsetTop) / SQUARE_SIZE);
     let square = game.getSquare(x, y);
     console.log(`clicked: (${x}, ${y}) / ${square}`);
-    if (game.selected == square) game.selected = null;
-    else game.selected = square;
+    if (game.selected == square) {
+        game.selected = null;
+    } else if (game.selected != null) {
+        let selectedSquareCoords = game.toCoords(game.selected);
+        console.log(`The currently selected square is: ${JSON.stringify(selectedSquareCoords)}`);
+        let selectedOccupant = game.squares[selectedSquareCoords.y][selectedSquareCoords.x].occupant;
+        console.log(`The currently selected piece is: ${JSON.stringify(selectedOccupant)}`);
+        let validMove = true; // TODO: movement checks! piece and situation-specific (pins, etc.)
+        let occupant = game.squares[y][x].occupant;
+        console.log(`The targeted piece is: ${JSON.stringify(occupant)}`);
+        if (validMove && occupant != null && occupant.color != game.turn) {
+            // TODO: Rules and effects for capture
+        } else if (occupant == null) {
+            // TODO: Rules and effects for simple movement
+            // TODO: Rules and effects for castling
+            // TODO: Rules and effects for en passant
+            // TODO: Rules and effects for promotions
+        }
+    } else {
+        game.selected = square;
+    }
+    // TODO: Rules and effects for check(mate)
+    if (wasFlipped) game.flipBoard();
+    // TODO: Thoroughly test this game loop.
 });
 
 // Event listener for board flipping button
