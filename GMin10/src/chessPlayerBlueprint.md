@@ -3,15 +3,16 @@
 The following is my blueprint/brainstorming/plan/map/thing for implementing a chess player in the site. This will include 2-player hotseat, post-game analysis, replays with HUD analysis, AI vs AI evolving leagues, and probably more.
 
 1. Implement basic chess rules && 2-player hotseat
-    1. Test movement and state without movement rules.**<-- Am Here**
-    2. Movement and capture rules in all cases.
+    1. Test movement and state without movement rules. *(complete)*
+    2. Implement movement and capture rules in all cases. **<-- Am Here *(partially complete)***
     3. collect moves in algebraic notation. 
     4. Affect board state correctly.
-    5. Game over checks and game reset functionality (maybe streak tracking).
+    5. Game over checks and game reset functionality (maybe win/loss tracking).
+    6. Some automated tests.
 
 **Big Picture**: At this point 2-player hotseat will be functional. 
 
-2. Animated game replays. Time should be spent here to make sure I squeeze every possible HUD point out of this, because all of it is going to be used for analysis (and everything used for analysis will be used for AI at some point, and my own personal studies as a chess player). Going beyond what Lichess and Chess.com do in some cases, but also not doing some very important things which they do (much will have to wait until I've hooked this up to a stockfish dealio, and even then I'm not trying to duplicate existing analysis tools exactly). The main thing here is to iron out any edge cases that I missed in the last step, and to flesh out the HUD and display.
+2. Animated game replays. Time should be spent here to make sure I squeeze every possible HUD point out of this, because all of it is going to be used for analysis (and everything used for analysis will be used for AI at some point, and my own personal studies as a chess player). Going beyond what Lichess and Chess.com do in some cases, but also not doing some very important things which they do (much will have to wait until I've hooked this up to a stockfish dealio, and even then I'm not trying to duplicate existing analysis tools exactly). The main thing here is to iron out any edge cases that I missed in the last step, and to flesh out the HUD and display. Some of this will get implemented during the final phase of step #1, while implementing automated tests.
 
 **Big Picture**: At this step, I will probably take the time to implement some artwork for the pieces and board, allowing for customization. Until this point, just simple placeholder art. Probably after this point, too -- just slightly better placeholder art.
 

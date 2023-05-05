@@ -14,12 +14,116 @@ canvas.width = SQUARE_SIZE * BOARD_SIZE;
 canvas.height= SQUARE_SIZE * BOARD_SIZE;
 let context = canvas.getContext("2d");
 
-class Piece {
+class Piece { 
     constructor(type, color, x, y) {
         this.type = type;
         this.color = color;
         this.x = x;
         this.y = y;
+        this.timesMoved = 0;
+    }
+
+    /* Returns true if the move obeys the rules of chess given the current
+       game state and the target of the attempted move in x, y coordinates.  */
+    obeysMoveRules(gameState, x, y) {
+        /* NOTE: The case of x == selectedX && y == selectedY is covered elsewhere, and
+           results in de-selection of the current square by default.  */
+        let color = this.color;
+        let selectedY = this.y;
+        let selectedX = this.x;
+        let timesMoved = this.timesMoved;
+        if (color != gameState.turn) return false;
+        let occupant = game.squares[y][x].occupant;
+        /* TODO: No en passant, castling, or checks yet (in progress).  */
+        function isAdjacentMoveOrCapture() {
+            return Math.abs(selectedX - x) <= 1 && Math.abs(selectedY - y) <= 1 && (occupant == null || occupant.color != color);
+        }
+        function isBlocked(target, square, isTarget, occupied, sameSide) {
+            return occupied && (sameSide || !isTarget); 
+        }
+        function isValidCaptureOrMove(target, square, isTarget, occupied, sameSide) {
+            return isTarget && (!occupied || !sameSide);
+        }
+        function isDiagonalMoveOrCapture() {
+            if (occupant != null && occupant.color == color) return false;
+            let yDiff = selectedY - y;
+            let xDiff = selectedX - x;
+            if (yDiff == 0 || xDiff == 0) return false;
+            function getNextOffsets(distance) {
+                if (yDiff < 0 && xDiff < 0) { 
+                    return {x: distance, y: distance};
+                } else if (yDiff < 0 && xDiff > 0) { 
+                    return {x: -distance, y: distance};
+                } else if (yDiff > 0 && xDiff < 0) { 
+                    return {x: distance, y: -distance};
+                } else if (yDiff > 0 && xDiff > 0) { 
+                    return {x: -distance, y: -distance};
+                }
+            }
+            for (let distance = 1; distance <= Math.abs(yDiff); distance++) { 
+                let offsets = getNextOffsets(distance);
+                let target = {x: selectedX + offsets.x, y: selectedY + offsets.y};
+                let square = gameState.squares[target.y][target.x];
+                let isTarget = target.x == square.x && target.y == square.y;
+                let occupied = square.occupant != null;
+                let sameSide = square.occupant != null && occupant.color == color; 
+                if (isBlocked(target, square, isTarget, occupied, sameSide)) return false;
+                else if (isValidCaptureOrMove(target, square, isTarget, occupied, sameSide)) return true;
+            }
+            return false; 
+        }
+        function isStraightMoveOrCapture() { 
+            if (occupant != null && occupant.color == color) return false;
+            let yDiff = selectedY - y;
+            let xDiff = selectedX - x;
+            if (!(yDiff == 0 || xDiff == 0)) return false;
+            function getNextOffsets(distance) { 
+                if (yDiff == 0 && xDiff > 0) { 
+                    return {x: -distance, y: 0};
+                } else if (yDiff == 0 && xDiff < 0) { 
+                    return {x: distance, y: 0};
+                } else if (yDiff > 0 && xDiff == 0) { 
+                    return {x: 0, y: -distance};
+                } else if (yDiff < 0 && xDiff == 0) { 
+                    return {x: 0, y: distance};
+                }
+            }
+            for (let distance = 1; distance <= Math.max(Math.abs(yDiff), Math.abs(xDiff)); distance++) {
+                let offsets = getNextOffsets(distance);
+                let target = {x: selectedX + offsets.x, y: selectedY + offsets.y};
+                let square = gameState.squares[target.y][target.x];
+                let isTarget = target.x == square.x && target.y == square.y;
+                let occupied = square.occupant != null;
+                let sameSide = square.occupant != null && occupant.color == color; 
+                if (isBlocked(target, square, isTarget, occupied, sameSide)) return false;
+                else if (isValidCaptureOrMove(target, square, isTarget, occupied, sameSide)) return true;
+            }
+            return false;
+        }
+        function getForward() {
+            var forward = 1;
+            if (color == "white") forward *= -1;
+            return forward;
+        }
+        function isPawnCapture() {
+            let forward = getForward();
+            return (y == selectedY + forward && Math.abs(selectedX - x) == 1 && occupant.color != color);
+        }
+        function isUnblockedForwardMovement() {
+            let forward = getForward();
+            return x == selectedX && occupant == null && (y == selectedY + forward || (y == selectedY + forward * 2 && timesMoved == 0));
+        }
+        function isKnightMoveOrCapture() {
+            let xDiff = Math.abs(x - selectedX);
+            let yDiff = Math.abs(y - selectedY);
+            return (xDiff == 1 && yDiff == 2) || (xDiff == 2 && yDiff == 1);
+        }
+        if (this.type == "p") return isPawnCapture() || isUnblockedForwardMovement();
+        else if (this.type == "N") return isKnightMoveOrCapture();
+        else if (this.type == "Q") return isAdjacentMoveOrCapture() || isDiagonalMoveOrCapture() || isStraightMoveOrCapture();
+        else if (this.type == "K") return isAdjacentMoveOrCapture();
+        else if (this.type == "B") return isDiagonalMoveOrCapture();
+        else if (this.type == "R") return isStraightMoveOrCapture();
     }
 }
 
@@ -42,6 +146,8 @@ class chessGameState {
                     file: FILES[x],
                     lightOrDark: lightOrDark,
                     occupant: null, 
+                    x: x,
+                    y: y
                 };
                 this.squares[y].push(square); 
                 toggleLightOrDark();
@@ -89,14 +195,21 @@ class chessGameState {
             }
         } 
         // initialize the game stats
-        this.moveList = []; // stores the move list in algebraic notation
+        this.moveList = []; // stores the record of each move
         this.flipped = false;
-        this.moveNum = 0;
+        this.moveNum = 1;
         this.turn = "white";
         this.selected = null; // `${FILE}${RANK}` or null
         // TODO: much more
     }
-    flipBoard() { // TODO: make sure this function is used throughout
+    toggleTurn() {
+        if (this.turn == "white") this.turn = "black";
+        else if (this.turn == "black") {
+            this.turn = "white";
+            this.moveNum++;
+        }
+    }
+    flipBoard() { 
         this.flipped = !this.flipped;
     }
     /* Returns the string of the square based on the x, y coordinates of a square.  */
@@ -168,6 +281,20 @@ function renderBoardState(gameState) {
     }
 }
 
+function updateHud(gameState) {
+    function updateMoveLabel() {
+        let moveNumButton = document.getElementById("moveNum");
+        moveNumButton.textContent = `move #: ${gameState.moveNum}`;
+    }
+    function updateTurnLabel() {
+        let turnButton = document.getElementById("turn");
+        turnButton.textContent = `${gameState.turn} to move`;
+    }
+    updateMoveLabel();
+    updateTurnLabel();
+    // TODO: Much more
+}
+
 // The game state:
 let game = new chessGameState();
 
@@ -175,34 +302,44 @@ let game = new chessGameState();
 canvas.addEventListener("click", (event) => { 
     let wasFlipped = game.flipped;
     if (wasFlipped) game.flipBoard();
-    let x = Math.floor((event.x - canvas.offsetLeft) / SQUARE_SIZE);
-    let y = Math.floor((event.y - canvas.offsetTop) / SQUARE_SIZE);
+    var x = Math.floor((event.x - canvas.offsetLeft) / SQUARE_SIZE);
+    var y = Math.floor((event.y - canvas.offsetTop) / SQUARE_SIZE);
+    if (wasFlipped) {
+        let xy = game.flippedCoords(x, y);
+        x = xy.x;
+        y = xy.y; 
+    }
     let square = game.getSquare(x, y);
-    console.log(`clicked: (${x}, ${y}) / ${square}`);
     if (game.selected == square) {
         game.selected = null;
     } else if (game.selected != null) {
         let selectedSquareCoords = game.toCoords(game.selected);
-        console.log(`The currently selected square is: ${JSON.stringify(selectedSquareCoords)}`);
         let selectedOccupant = game.squares[selectedSquareCoords.y][selectedSquareCoords.x].occupant;
-        console.log(`The currently selected piece is: ${JSON.stringify(selectedOccupant)}`);
-        let validMove = true; // TODO: movement checks! piece and situation-specific (pins, etc.)
         let occupant = game.squares[y][x].occupant;
-        console.log(`The targeted piece is: ${JSON.stringify(occupant)}`);
-        if (validMove && occupant != null && occupant.color != game.turn) {
-            // TODO: Rules and effects for capture
-        } else if (occupant == null) {
-            // TODO: Rules and effects for simple movement
-            // TODO: Rules and effects for castling
-            // TODO: Rules and effects for en passant
-            // TODO: Rules and effects for promotions
+        let moveReport = {
+            validMove: selectedOccupant.obeysMoveRules(game, x, y),
+            capture: selectedOccupant != null && selectedOccupant.color != game.turn,
+            // TODO: Notation string
+        };
+        if (moveReport.validMove) {
+            game.moveList.push(moveReport);
+            game.squares[selectedSquareCoords.y][selectedSquareCoords.x].occupant = null;
+            selectedOccupant.timesMoved++;
+            selectedOccupant.x = x;
+            selectedOccupant.y = y;
+            game.squares[y][x].occupant = selectedOccupant;
+            game.selected = null;
+            /* TODO: Castling check here, and a promotion check, as those are the only two situations in which
+               the selected square might retain an occupant.  */
+            // TODO: Capture checks, for the sake of metadata mostly.
+            // TODO: Rules and effects for check(mate) & game over
+            game.toggleTurn();
+            updateHud(game);
         }
     } else {
         game.selected = square;
     }
-    // TODO: Rules and effects for check(mate)
     if (wasFlipped) game.flipBoard();
-    // TODO: Thoroughly test this game loop.
 });
 
 // Event listener for board flipping button
@@ -210,11 +347,6 @@ let flipButton = document.getElementById("flip");
 flipButton.addEventListener("click", (event) => {
     game.flipped = !game.flipped;
 });
-
-function updateMoveLabel(gameState) {
-    let moveNumButton = document.getElementById("moveNum");
-    moveNumButton.textContent = `Move: ${gameState.moveNum}`;
-}
 
 function animate() {
     let start = Date.now();
